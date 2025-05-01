@@ -25,7 +25,7 @@ from sklearn.ensemble import RandomForestClassifier
 # Vérification des ressources NLTK pré-téléchargées
 def verifier_nltk_ressources():
     try:
-        nltk.data.find('tokenizers/punkt')
+        nltk.data.find('tokenizers/punkt_tab')
         nltk.data.find('corpora/stopwords')
         nltk.data.find('corpora/wordnet')
         return True
@@ -34,14 +34,17 @@ def verifier_nltk_ressources():
 
 # Arrêter si les ressources sont absentes
 if not verifier_nltk_ressources():
-    st.error("Ressources NLTK manquantes. Exécutez le script suivant pour les télécharger :")
+    st.error("Ressources NLTK manquantes. Exécution du script suivant pour les télécharger :")
     st.code("""
     import nltk
-    nltk.download('tokenizers/punkt')
+    nltk.download('tokenizers/punkt_tab')
     nltk.download('corpora/stopwords')
     nltk.download('corpora/wordnet')
     """)
-    st.stop()
+    nltk.download('tokenizers/punkt_tab')
+    nltk.download('corpora/stopwords')
+    nltk.download('corpora/wordnet')
+    # st.stop()
 
 # Fonction de prétraitement du texte 
 def preprocesser_texte(texte):
