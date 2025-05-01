@@ -37,9 +37,9 @@ if not verifier_nltk_ressources():
     st.error("Ressources NLTK manquantes. Exécutez le script suivant pour les télécharger :")
     st.code("""
     import nltk
-    nltk.download('punkt_tab')
-    nltk.download('stopwords')
-    nltk.download('wordnet')
+    nltk.download('tokenizers/punkt')
+    nltk.download('corpora/stopwords')
+    nltk.download('corpora/wordnet')
     """)
     st.stop()
 
