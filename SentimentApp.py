@@ -29,9 +29,9 @@ from sklearn.ensemble import RandomForestClassifier
 # Vérification des ressources NLTK pré-téléchargées
 def verifier_nltk_ressources():
     try:
-        nltk.data.find('tokenizers/punkt_tab')
-        nltk.data.find('corpora/stopwords')
-        nltk.data.find('corpora/wordnet')
+        nltk.data.find('./tokenizers/punkt_tab')
+        nltk.data.find('./corpora/stopwords')
+        nltk.data.find('./corpora/wordnet')
         return True
     except LookupError:
         return False
