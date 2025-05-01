@@ -19,10 +19,11 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 
-nltk.download('punkt_tab')
+# Télécharger les ressources NLTK nécessaires
+nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
@@ -37,7 +38,7 @@ def preprocesser_texte(texte):
 # Titre de l'application
 st.title("Détection de Sentiment")
 
-# Widget pour télécharger un fichier ou entrer du texte
+# Choix de l'utilisateur
 option = st.radio("Choisissez une option :", ("Entraîner un modèle (CSV)", "Prédire un sentiment (Texte)"))
 
 if option == "Entraîner un modèle (CSV)":
@@ -51,10 +52,12 @@ if option == "Entraîner un modèle (CSV)":
             if "texte" not in donnees.columns or "sentiment" not in donnees.columns:
                 st.error("Le CSV doit contenir les colonnes 'texte' et 'sentiment'.")
             else:
-                # Prétraitement
-                donnees['texte_pretraite'] = donnees['texte'].apply(preprocesser_texte)
-                X = donnees['texte_pretraite']
-                y = donnees['sentiment']
+                # Nettoyage et prétraitement
+                donnees = donnees.dropna(subset=["texte", "sentiment"])
+                donnees["texte"] = donnees["texte"].astype(str)
+                donnees["texte_pretraite"] = donnees["texte"].apply(preprocesser_texte)
+                X = donnees["texte_pretraite"]
+                y = donnees["sentiment"]
 
                 # Vectorisation
                 vectoriseur = TfidfVectorizer(max_features=5000)
@@ -70,8 +73,7 @@ if option == "Entraîner un modèle (CSV)":
                 st.subheader("Régression Logistique")
                 modele_lr = LogisticRegression(max_iter=1000)
                 modele_lr.fit(X_train, y_train)
-                predictions_lr = modele_lr.predict(X_test)
-                precision_lr = accuracy_score(y_test, predictions_lr)
+                precision_lr = accuracy_score(y_test, modele_lr.predict(X_test))
                 st.write(f"Précision : {precision_lr:.2f}")
                 joblib.dump(modele_lr, 'modele_lr.pkl')
 
@@ -79,8 +81,7 @@ if option == "Entraîner un modèle (CSV)":
                 st.subheader("Naive Bayes")
                 modele_nb = MultinomialNB()
                 modele_nb.fit(X_train, y_train)
-                predictions_nb = modele_nb.predict(X_test)
-                precision_nb = accuracy_score(y_test, predictions_nb)
+                precision_nb = accuracy_score(y_test, modele_nb.predict(X_test))
                 st.write(f"Précision : {precision_nb:.2f}")
                 joblib.dump(modele_nb, 'modele_nb.pkl')
 
@@ -88,19 +89,18 @@ if option == "Entraîner un modèle (CSV)":
                 st.subheader("Random Forest")
                 modele_rf = RandomForestClassifier(random_state=42)
                 modele_rf.fit(X_train, y_train)
-                predictions_rf = modele_rf.predict(X_test)
-                precision_rf = accuracy_score(y_test, predictions_rf)
+                precision_rf = accuracy_score(y_test, modele_rf.predict(X_test))
                 st.write(f"Précision : {precision_rf:.2f}")
                 joblib.dump(modele_rf, 'modele_rf.pkl')
 
-                # Optimisation Optuna (Logistic Regression)
+                # Optimisation Optuna
                 st.subheader("Optimisation Régression Logistique")
                 def objectif(trial):
-                    C = trial.suggest_float('C', 0.01, 10.0, log=True)
+                    C = trial.suggest_float("C", 0.01, 10.0, log=True)
                     modele = LogisticRegression(C=C, max_iter=1000)
                     return cross_val_score(modele, X_train, y_train, cv=3, scoring='accuracy').mean()
 
-                etude = optuna.create_study(direction='maximize')
+                etude = optuna.create_study(direction="maximize")
                 etude.optimize(objectif, n_trials=20)
                 st.write(f"Meilleurs hyperparamètres : {etude.best_params}")
                 st.write(f"Meilleur score : {etude.best_value:.2f}")
@@ -110,20 +110,17 @@ if option == "Entraîner un modèle (CSV)":
 
 else:
     texte_input = st.text_area("Entrez un texte pour prédire le sentiment :")
-    
+
     if texte_input:
         try:
-            # Charger les modèles et le vectoriseur
-            modele_lr = joblib.load('modele_lr.pkl')
-            modele_nb = joblib.load('modele_nb.pkl')
-            modele_rf = joblib.load('modele_rf.pkl')
-            vectoriseur = joblib.load('vectoriseur.pkl')
+            modele_lr = joblib.load("modele_lr.pkl")
+            modele_nb = joblib.load("modele_nb.pkl")
+            modele_rf = joblib.load("modele_rf.pkl")
+            vectoriseur = joblib.load("vectoriseur.pkl")
 
-            # Prétraitement et vectorisation
             texte_pretraite = preprocesser_texte(texte_input)
             texte_vectorise = vectoriseur.transform([texte_pretraite])
 
-            # Prédictions
             pred_lr = modele_lr.predict(texte_vectorise)[0]
             pred_nb = modele_nb.predict(texte_vectorise)[0]
             pred_rf = modele_rf.predict(texte_vectorise)[0]
