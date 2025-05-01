@@ -19,14 +19,24 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
+from nltk.data import find
 
-# Gestion manuelle des ressources NLTK
-nltk.data.path.clear()  # Vide les chemins personnalisés s’il y en a
-nltk.download('punkt', force=True)
-nltk.download('stopwords', force=True)
-nltk.download('wordnet', force=True)
+# Configuration des chemins NLTK (optionnel mais utile sur certains environnements)
+NLTK_DIR = '/tmp/nltk_data'
+nltk.data.path.append(NLTK_DIR)
+
+# Téléchargement sécurisé des ressources NLTK
+def telecharger_ressource(resource):
+    try:
+        find(resource)
+    except LookupError:
+        nltk.download(resource.split('/')[-1], download_dir=NLTK_DIR)
+
+telecharger_ressource('tokenizers/punkt')
+telecharger_ressource('corpora/stopwords')
+telecharger_ressource('corpora/wordnet')
 
 # Fonction de prétraitement du texte
 def preprocesser_texte(texte):
