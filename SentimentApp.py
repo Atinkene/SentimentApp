@@ -37,13 +37,13 @@ if not verifier_nltk_ressources():
     st.error("Ressources NLTK manquantes. Exécutez le script suivant pour les télécharger :")
     st.code("""
     import nltk
-    nltk.download('punkt')
+    nltk.download('punkt_tab')
     nltk.download('stopwords')
     nltk.download('wordnet')
     """)
     st.stop()
 
-# Fonction de prétraitement du texte
+# Fonction de prétraitement du texte 
 def preprocesser_texte(texte):
     stop_words = set(stopwords.words('english'))
     lemmatiseur = WordNetLemmatizer()
