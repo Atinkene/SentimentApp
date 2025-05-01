@@ -13,6 +13,7 @@ import optuna
 import nltk
 import os
 import shutil
+from nltk.data import find
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -25,22 +26,19 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 
-# Téléchargement sécurisé des ressources NLTK
-def telecharger_ressources_nltk():
-    ressources = ['punkt', 'stopwords', 'wordnet']
-    for res in ressources:
-        try:
-            find(res)
-        except LookupError:
-            try:
-                nltk.download(res)
-            except:
-                dossier = os.path.join(nltk.data.find('tokenizers').path, res)
-                if os.path.exists(dossier):
-                    shutil.rmtree(dossier)
-                nltk.download(res)
+def reinstaller_nltk_ressource(ressource):
+    try:
+        chemin = find(ressource)
+        if os.path.exists(chemin):
+            shutil.rmtree(chemin, ignore_errors=True)
+    except LookupError:
+        pass
+    nltk.download(ressource)
 
-telecharger_ressources_nltk()
+# Forcer la réinstallation de punkt (corrige punkt_tab)
+reinstaller_nltk_ressource('punkt')
+reinstaller_nltk_ressource('stopwords')
+reinstaller_nltk_ressource('wordnet')
 
 # Fonction de prétraitement du texte
 def preprocesser_texte(texte):
