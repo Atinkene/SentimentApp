@@ -12,33 +12,19 @@ import joblib
 import optuna
 import nltk
 import os
-import shutil
-from nltk.data import find
-
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
-from nltk.data import find
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.ensemble import RandomForestClassifier
 
-def reinstaller_nltk_ressource(ressource):
-    try:
-        chemin = find(ressource)
-        if os.path.exists(chemin):
-            shutil.rmtree(chemin, ignore_errors=True)
-    except LookupError:
-        pass
-    nltk.download(ressource)
-
-# Forcer la réinstallation de punkt (corrige punkt_tab)
-reinstaller_nltk_ressource('punkt')
-reinstaller_nltk_ressource('stopwords')
-reinstaller_nltk_ressource('wordnet')
+nltk.download('punkt_tab')
+nltk.download('stopwords')
+nltk.download('wordnet')
 
 # Fonction de prétraitement du texte
 def preprocesser_texte(texte):
