@@ -47,9 +47,9 @@ if not verifier_nltk_ressources():
     """)
     try:
         with st.spinner("Téléchargement des ressources NLTK..."):
-            nltk.download('punkt', quiet=True)
-            nltk.download('stopwords', quiet=True)
-            nltk.download('wordnet', quiet=True)
+            nltk.download('punkt')
+            nltk.download('stopwords')
+            nltk.download('wordnet')
         if verifier_nltk_ressources():
             st.success("Ressources NLTK téléchargées avec succès !")
         else:
