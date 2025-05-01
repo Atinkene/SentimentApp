@@ -22,9 +22,11 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.ensemble import RandomForestClassifier
 
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
+# Gestion manuelle des ressources NLTK
+nltk.data.path.clear()  # Vide les chemins personnalisés s’il y en a
+nltk.download('punkt', force=True)
+nltk.download('stopwords', force=True)
+nltk.download('wordnet', force=True)
 
 # Fonction de prétraitement du texte
 def preprocesser_texte(texte):
