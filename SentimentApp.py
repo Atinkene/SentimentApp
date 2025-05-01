@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-sentiment_app.ipynb
+sentiment_app.py
 Application Streamlit pour entraîner des modèles de détection de sentiment sur un CSV ou prédire le sentiment d'un texte.
 """
 
@@ -22,6 +22,10 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.ensemble import RandomForestClassifier
 
+# Ajouter un chemin personnalisé pour nltk_data (optionnel, décommentez si nécessaire)
+# nltk.data.path.append('./nltk_data')  # Pour inclure nltk_data dans le projet
+# nltk.data.path.append('/home/appuser/nltk_data')  # Pour un chemin spécifique
+
 # Vérification des ressources NLTK pré-téléchargées
 def verifier_nltk_ressources():
     try:
@@ -34,19 +38,28 @@ def verifier_nltk_ressources():
 
 # Arrêter si les ressources sont absentes
 if not verifier_nltk_ressources():
-    st.error("Ressources NLTK manquantes. Exécution du script suivant pour les télécharger :")
+    st.error("Ressources NLTK manquantes. Exécutez le script suivant pour les télécharger :")
     st.code("""
     import nltk
-    nltk.download('tokenizers/punkt_tab')
-    nltk.download('corpora/stopwords')
-    nltk.download('corpora/wordnet')
+    nltk.download('punkt_tab')
+    nltk.download('stopwords')
+    nltk.download('wordnet')
     """)
-    nltk.download('tokenizers/punkt_tab')
-    nltk.download('corpora/stopwords')
-    nltk.download('corpora/wordnet')
-    # st.stop()
+    try:
+        with st.spinner("Téléchargement des ressources NLTK..."):
+            nltk.download('punkt_tab', quiet=True)
+            nltk.download('stopwords', quiet=True)
+            nltk.download('wordnet', quiet=True)
+        if verifier_nltk_ressources():
+            st.success("Ressources NLTK téléchargées avec succès !")
+        else:
+            st.error("Échec du téléchargement des ressources. Vérifiez votre connexion ou téléchargez manuellement.")
+            st.stop()
+    except Exception as e:
+        st.error(f"Erreur lors du téléchargement des ressources : {str(e)}")
+        st.stop()
 
-# Fonction de prétraitement du texte 
+# Fonction de prétraitement du texte
 def preprocesser_texte(texte):
     stop_words = set(stopwords.words('english'))
     lemmatiseur = WordNetLemmatizer()
