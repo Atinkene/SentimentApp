@@ -29,7 +29,7 @@ from sklearn.ensemble import RandomForestClassifier
 # Vérification des ressources NLTK pré-téléchargées
 def verifier_nltk_ressources():
     try:
-        nltk.data.find('./tokenizers/punkt_tab')
+        nltk.data.find('./tokenizers/punkt')
         nltk.data.find('./corpora/stopwords')
         nltk.data.find('./corpora/wordnet')
         return True
@@ -41,13 +41,13 @@ if not verifier_nltk_ressources():
     st.error("Ressources NLTK manquantes. Exécutez le script suivant pour les télécharger :")
     st.code("""
     import nltk
-    nltk.download('punkt_tab')
+    nltk.download('punkt')
     nltk.download('stopwords')
     nltk.download('wordnet')
     """)
     try:
         with st.spinner("Téléchargement des ressources NLTK..."):
-            nltk.download('punkt_tab', quiet=True)
+            nltk.download('punkt', quiet=True)
             nltk.download('stopwords', quiet=True)
             nltk.download('wordnet', quiet=True)
         if verifier_nltk_ressources():
