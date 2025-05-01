@@ -4,9 +4,6 @@ sentiment_app.ipynb
 Application Streamlit pour entraîner des modèles de détection de sentiment sur un CSV ou prédire le sentiment d'un texte.
 """
 
-# Installation des bibliothèques (pour Colab ou environnements similaires)
-# !pip install pandas joblib scikit-learn streamlit optuna nltk
-
 # Importation des bibliothèques
 import streamlit as st
 import pandas as pd
@@ -14,6 +11,7 @@ import numpy as np
 import joblib
 import optuna
 import nltk
+import os
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
@@ -24,10 +22,26 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.ensemble import RandomForestClassifier
 
-# Téléchargement des ressources NLTK
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
+# Vérification des ressources NLTK pré-téléchargées
+def verifier_nltk_ressources():
+    try:
+        nltk.data.find('tokenizers/punkt')
+        nltk.data.find('corpora/stopwords')
+        nltk.data.find('corpora/wordnet')
+        return True
+    except LookupError:
+        return False
+
+# Arrêter si les ressources sont absentes
+if not verifier_nltk_ressources():
+    st.error("Ressources NLTK manquantes. Exécutez le script suivant pour les télécharger :")
+    st.code("""
+    import nltk
+    nltk.download('punkt')
+    nltk.download('stopwords')
+    nltk.download('wordnet')
+    """)
+    st.stop()
 
 # Fonction de prétraitement du texte
 def preprocesser_texte(texte):
