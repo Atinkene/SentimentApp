@@ -12,31 +12,35 @@ import joblib
 import optuna
 import nltk
 import os
+import shutil
+
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from nltk.data import find
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
-from nltk.data import find
-
-# Configuration des chemins NLTK (optionnel mais utile sur certains environnements)
-NLTK_DIR = '/tmp/nltk_data'
-nltk.data.path.append(NLTK_DIR)
 
 # Téléchargement sécurisé des ressources NLTK
-def telecharger_ressource(resource):
-    try:
-        find(resource)
-    except LookupError:
-        nltk.download(resource.split('/')[-1], download_dir=NLTK_DIR)
+def telecharger_ressources_nltk():
+    ressources = ['punkt', 'stopwords', 'wordnet']
+    for res in ressources:
+        try:
+            find(res)
+        except LookupError:
+            try:
+                nltk.download(res)
+            except:
+                dossier = os.path.join(nltk.data.find('tokenizers').path, res)
+                if os.path.exists(dossier):
+                    shutil.rmtree(dossier)
+                nltk.download(res)
 
-telecharger_ressource('tokenizers/punkt')
-telecharger_ressource('corpora/stopwords')
-telecharger_ressource('corpora/wordnet')
+telecharger_ressources_nltk()
 
 # Fonction de prétraitement du texte
 def preprocesser_texte(texte):
