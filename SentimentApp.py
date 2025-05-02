@@ -47,8 +47,10 @@ def preprocesser_texte(texte):
     # Normalisation : suppression des accents et mise en minuscule
     texte = unicodedata.normalize('NFKD', texte).encode('ASCII', 'ignore').decode('utf-8').lower()
 
-    # Tokenisation
-    tokens = word_tokenize(texte)
+    if not isinstance(texte, str):
+        texte = ""
+        tokens = word_tokenize(texte.lower())
+
 
     # Suppression des stopwords, lemmatisation et stemming
     tokens = [
