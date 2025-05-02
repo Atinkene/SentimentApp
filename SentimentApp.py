@@ -36,42 +36,43 @@ lemmatiseur = WordNetLemmatizer()
 stemmer = PorterStemmer()
 
 def preprocesser_texte(texte):
-    # Forcer en chaîne si non valide (None, float, etc.)
-    if not isinstance(texte, str):
+    try:
+        # Gestion des cas où texte est None, float, NaN, etc.
+        if texte is None or pd.isna(texte):
+            return ""
+
+        # Conversion en string si ce n'est pas déjà
+        texte = str(texte)
+
+        # Traduction automatique vers l'anglais
         try:
-            texte = str(texte)
-        except Exception:
-            texte = ""
+            texte = GoogleTranslator(source='auto', target='en').translate(texte)
+        except Exception as e:
+            st.warning(f"Erreur de traduction automatique : {e}")
+            return ""
 
-    # Vérification finale
-    if texte is None or texte.strip() == "" or texte.lower() == "nan":
-        return ""
+        # Normalisation Unicode
+        try:
+            texte = unicodedata.normalize('NFKD', texte or "").encode('ASCII', 'ignore').decode('utf-8').lower()
+        except Exception as e:
+            st.warning(f"Erreur de normalisation : {e}")
+            texte = texte.lower() if isinstance(texte, str) else ""
 
-    # Traduction vers l'anglais
-    try:
-        texte = GoogleTranslator(source='auto', target='en').translate(texte)
+        # Tokenisation
+        tokens = word_tokenize(texte)
+
+        # Suppression des stopwords + lemmatisation + stemming
+        tokens = [
+            stemmer.stem(lemmatiseur.lemmatize(token))
+            for token in tokens
+            if token.isalnum() and token not in stop_words
+        ]
+
+        return ' '.join(tokens)
+
     except Exception as e:
-        st.warning(f"Erreur de traduction automatique : {e}")
+        st.warning(f"Erreur de prétraitement : {e}")
         return ""
-
-    # Normalisation Unicode
-    try:
-        texte = unicodedata.normalize('NFKD', texte).encode('ASCII', 'ignore').decode('utf-8').lower()
-    except Exception as e:
-        st.warning(f"Erreur de normalisation : {e}")
-        texte = texte.lower()
-
-    # Tokenisation
-    tokens = word_tokenize(texte)
-
-    # Suppression des stopwords, lemmatisation et stemming
-    tokens = [
-        stemmer.stem(lemmatiseur.lemmatize(token))
-        for token in tokens
-        if token.isalnum() and token not in stop_words
-    ]
-
-    return ' '.join(tokens)
 
 # Titre de l'application
 st.title("🧠 Détection de Sentiment Multilingue")
