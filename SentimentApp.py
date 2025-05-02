@@ -26,7 +26,7 @@ from sklearn.metrics import accuracy_score, f1_score, classification_report, con
 from deep_translator import GoogleTranslator
 
 # Télécharger les ressources NLTK nécessaires
-nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
