@@ -11,8 +11,8 @@ import numpy as np
 import joblib
 import optuna
 import nltk
-import os
 import unicodedata
+import time
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -26,42 +26,28 @@ from sklearn.metrics import accuracy_score, f1_score, classification_report, con
 from deep_translator import GoogleTranslator
 
 # Télécharger les ressources NLTK nécessaires
-nltk.download('punkt_tab')
+nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# Initialisation des outils NLP
+# Initialisation NLP
 stop_words = set(stopwords.words('english'))
 lemmatiseur = WordNetLemmatizer()
 stemmer = PorterStemmer()
 
+# Fonction de prétraitement de texte
 def preprocesser_texte(texte):
+    if not isinstance(texte, str) or texte.strip() == "":
+        return ""
+
     try:
-        # Gestion des cas où texte est None, float, NaN, etc.
-        if texte is None or pd.isna(texte):
-            return ""
-
-        # Conversion en string si ce n'est pas déjà
-        texte = str(texte)
-
-        # Traduction automatique vers l'anglais
-        try:
-            texte = GoogleTranslator(source='auto', target='en').translate(texte)
-        except Exception as e:
-            st.warning(f"Erreur de traduction automatique : {e}")
-            return ""
-
-        # Normalisation Unicode
-        try:
-            texte = unicodedata.normalize('NFKD', texte or "").encode('ASCII', 'ignore').decode('utf-8').lower()
-        except Exception as e:
-            st.warning(f"Erreur de normalisation : {e}")
-            texte = texte.lower() if isinstance(texte, str) else ""
+        # Normalisation : suppression des accents et mise en minuscule
+        texte = unicodedata.normalize('NFKD', texte).encode('ASCII', 'ignore').decode('utf-8').lower()
 
         # Tokenisation
         tokens = word_tokenize(texte)
 
-        # Suppression des stopwords + lemmatisation + stemming
+        # Suppression des stopwords, lemmatisation et stemming
         tokens = [
             stemmer.stem(lemmatiseur.lemmatize(token))
             for token in tokens
@@ -71,8 +57,18 @@ def preprocesser_texte(texte):
         return ' '.join(tokens)
 
     except Exception as e:
-        st.warning(f"Erreur de prétraitement : {e}")
+        st.warning(f"Erreur de normalisation : {e}")
         return ""
+
+# Fonction de traduction par batch
+def traduire_colonne_par_batch(colonne):
+    textes = colonne.fillna("").astype(str).tolist()
+    try:
+        traductions = GoogleTranslator(source='auto', target='en').translate_batch(textes)
+        return traductions
+    except Exception as e:
+        st.warning(f"Erreur de traduction automatique : {e}")
+        return textes  # Renvoie les textes non traduits
 
 # Titre de l'application
 st.title("🧠 Détection de Sentiment Multilingue")
@@ -82,7 +78,7 @@ option = st.radio("Choisissez une option :", ("Entraîner un modèle (CSV)", "Pr
 
 if option == "Entraîner un modèle (CSV)":
     uploaded_file = st.file_uploader("Téléchargez un fichier CSV (colonnes : texte, sentiment)", type=["csv"])
-    
+
     if uploaded_file is not None:
         try:
             donnees = pd.read_csv(uploaded_file)
@@ -91,11 +87,18 @@ if option == "Entraîner un modèle (CSV)":
             if "texte" not in donnees.columns or "sentiment" not in donnees.columns:
                 st.error("❌ Le CSV doit contenir les colonnes 'texte' et 'sentiment'.")
             else:
-                # Nettoyage et prétraitement
+                # Nettoyage
                 donnees = donnees.dropna(subset=["texte", "sentiment"])
                 donnees["texte"] = donnees["texte"].astype(str)
+
+                # Traduction par batch
+                st.info("Traduction automatique en anglais...")
+                donnees["texte_traduit"] = traduire_colonne_par_batch(donnees["texte"])
+
+                # Prétraitement
                 st.info("Prétraitement en cours...")
-                donnees["texte_pretraite"] = donnees["texte"].apply(preprocesser_texte)
+                donnees["texte_pretraite"] = donnees["texte_traduit"].apply(preprocesser_texte)
+
                 X = donnees["texte_pretraite"]
                 y = donnees["sentiment"]
 
@@ -104,10 +107,8 @@ if option == "Entraîner un modèle (CSV)":
                 X_vectorise = vectoriseur.fit_transform(X)
                 joblib.dump(vectoriseur, 'vectoriseur.pkl')
 
-                # Séparation des données
+                # Séparation
                 X_train, X_test, y_train, y_test = train_test_split(X_vectorise, y, test_size=0.3, random_state=42)
-                st.write(f"📊 Dimensions entraînement : {X_train.shape}")
-                st.write(f"📊 Dimensions test : {X_test.shape}")
 
                 # Régression Logistique
                 st.subheader("🔍 Régression Logistique")
@@ -117,7 +118,6 @@ if option == "Entraîner un modèle (CSV)":
                 st.write(f"- Accuracy : {accuracy_score(y_test, y_pred_lr):.2f}")
                 st.write(f"- F1-score : {f1_score(y_test, y_pred_lr, average='weighted'):.2f}")
                 st.text(classification_report(y_test, y_pred_lr))
-                st.write("Matrice de confusion :")
                 st.write(confusion_matrix(y_test, y_pred_lr))
                 joblib.dump(modele_lr, 'modele_lr.pkl')
 
@@ -129,7 +129,6 @@ if option == "Entraîner un modèle (CSV)":
                 st.write(f"- Accuracy : {accuracy_score(y_test, y_pred_nb):.2f}")
                 st.write(f"- F1-score : {f1_score(y_test, y_pred_nb, average='weighted'):.2f}")
                 st.text(classification_report(y_test, y_pred_nb))
-                st.write("Matrice de confusion :")
                 st.write(confusion_matrix(y_test, y_pred_nb))
                 joblib.dump(modele_nb, 'modele_nb.pkl')
 
@@ -141,11 +140,10 @@ if option == "Entraîner un modèle (CSV)":
                 st.write(f"- Accuracy : {accuracy_score(y_test, y_pred_rf):.2f}")
                 st.write(f"- F1-score : {f1_score(y_test, y_pred_rf, average='weighted'):.2f}")
                 st.text(classification_report(y_test, y_pred_rf))
-                st.write("Matrice de confusion :")
                 st.write(confusion_matrix(y_test, y_pred_rf))
                 joblib.dump(modele_rf, 'modele_rf.pkl')
 
-                # Optimisation Optuna
+                # Optuna pour Logistique
                 st.subheader("⚙️ Optimisation Régression Logistique")
                 def objectif(trial):
                     C = trial.suggest_float("C", 0.01, 10.0, log=True)
@@ -165,14 +163,23 @@ else:
 
     if texte_input:
         try:
+            # Chargement
             modele_lr = joblib.load("modele_lr.pkl")
             modele_nb = joblib.load("modele_nb.pkl")
             modele_rf = joblib.load("modele_rf.pkl")
             vectoriseur = joblib.load("vectoriseur.pkl")
 
-            texte_pretraite = preprocesser_texte(texte_input)
+            # Traduction et prétraitement
+            try:
+                texte_traduit = GoogleTranslator(source='auto', target='en').translate(texte_input)
+            except Exception as e:
+                st.warning(f"Erreur de traduction automatique : {e}")
+                texte_traduit = texte_input
+
+            texte_pretraite = preprocesser_texte(texte_traduit)
             texte_vectorise = vectoriseur.transform([texte_pretraite])
 
+            # Prédictions
             pred_lr = modele_lr.predict(texte_vectorise)[0]
             pred_nb = modele_nb.predict(texte_vectorise)[0]
             pred_rf = modele_rf.predict(texte_vectorise)[0]
