@@ -4,3 +4,4 @@ scikit-learn
 streamlit
 optuna
 nltk
+unicodedata
