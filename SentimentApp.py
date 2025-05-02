@@ -36,28 +36,35 @@ lemmatiseur = WordNetLemmatizer()
 stemmer = PorterStemmer()
 
 def preprocesser_texte(texte):
-    # Sécurité : convertir None ou autres types en chaîne vide
+    # Forcer en chaîne si non valide (None, float, etc.)
     if not isinstance(texte, str):
-        texte = ""
+        try:
+            texte = str(texte)
+        except Exception:
+            texte = ""
 
-    # Traduction vers l'anglais si nécessaire
+    # Vérification finale
+    if texte is None or texte.strip() == "" or texte.lower() == "nan":
+        return ""
+
+    # Traduction vers l'anglais
     try:
         texte = GoogleTranslator(source='auto', target='en').translate(texte)
     except Exception as e:
-        st.error(f"Erreur de traduction automatique : {e}")
+        st.warning(f"Erreur de traduction automatique : {e}")
         return ""
 
-    # Normalisation Unicode (accents, minuscules)
+    # Normalisation Unicode
     try:
         texte = unicodedata.normalize('NFKD', texte).encode('ASCII', 'ignore').decode('utf-8').lower()
     except Exception as e:
         st.warning(f"Erreur de normalisation : {e}")
-        texte = texte.lower()  # fallback simple
+        texte = texte.lower()
 
     # Tokenisation
     tokens = word_tokenize(texte)
 
-    # Stop words, lemmatisation, stemming
+    # Suppression des stopwords, lemmatisation et stemming
     tokens = [
         stemmer.stem(lemmatiseur.lemmatize(token))
         for token in tokens
