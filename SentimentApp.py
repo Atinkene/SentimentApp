@@ -20,7 +20,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
 
 # Télécharger les ressources NLTK nécessaires
 nltk.download('punkt_tab')
@@ -73,24 +75,45 @@ if option == "Entraîner un modèle (CSV)":
                 st.subheader("Régression Logistique")
                 modele_lr = LogisticRegression(max_iter=1000)
                 modele_lr.fit(X_train, y_train)
-                precision_lr = accuracy_score(y_test, modele_lr.predict(X_test))
-                st.write(f"Précision : {precision_lr:.2f}")
+                y_pred_lr = modele_lr.predict(X_test)
+
+                st.write(f"### Régression Logistique")
+                st.write(f"- **Accuracy** : {accuracy_score(y_test, y_pred_lr):.2f}")
+                st.write(f"- **F1-score** : {f1_score(y_test, y_pred_lr, average='weighted'):.2f}")
+                st.write(f"- **Rapport de Classification :**")
+                st.text(classification_report(y_test, y_pred_lr))
+
+                st.write("Matrice de confusion :")
+                st.write(confusion_matrix(y_test, y_pred_lr))
+
                 joblib.dump(modele_lr, 'modele_lr.pkl')
 
                 # Modèle Naive Bayes
                 st.subheader("Naive Bayes")
                 modele_nb = MultinomialNB()
                 modele_nb.fit(X_train, y_train)
-                precision_nb = accuracy_score(y_test, modele_nb.predict(X_test))
-                st.write(f"Précision : {precision_nb:.2f}")
+                y_pred_nb = modele_nb.predict(X_test)
+                st.write(f"### Naive Bayes")
+                st.write(f"- **Accuracy** : {accuracy_score(y_test, y_pred_nb):.2f}")
+                st.write(f"- **F1-score** : {f1_score(y_test, y_pred_nb, average='weighted'):.2f}")
+                st.text(classification_report(y_test, y_pred_nb))
+                st.write("Matrice de confusion :")
+                st.write(confusion_matrix(y_test, y_pred_nb))
+
                 joblib.dump(modele_nb, 'modele_nb.pkl')
 
                 # Modèle Random Forest
                 st.subheader("Random Forest")
                 modele_rf = RandomForestClassifier(random_state=42)
                 modele_rf.fit(X_train, y_train)
-                precision_rf = accuracy_score(y_test, modele_rf.predict(X_test))
-                st.write(f"Précision : {precision_rf:.2f}")
+                y_pred_rf = modele_rf.predict(X_test)
+                st.write(f"### Random Forest")
+                st.write(f"- **Accuracy** : {accuracy_score(y_test, y_pred_rf):.2f}")
+                st.write(f"- **F1-score** : {f1_score(y_test, y_pred_rf, average='weighted'):.2f}")
+                st.text(classification_report(y_test, y_pred_rf))
+                st.write("Matrice de confusion :")
+                st.write(confusion_matrix(y_test, y_pred_rf))
+
                 joblib.dump(modele_rf, 'modele_rf.pkl')
 
                 # Optimisation Optuna
