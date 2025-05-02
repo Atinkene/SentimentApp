@@ -36,7 +36,7 @@ lemmatiseur = WordNetLemmatizer()
 stemmer = PorterStemmer()
 
 def preprocesser_texte(texte):
-    # Si texte n'est pas une string, le transformer en chaîne vide
+    # Sécurité : convertir None ou autres types en chaîne vide
     if not isinstance(texte, str):
         texte = ""
 
@@ -47,13 +47,17 @@ def preprocesser_texte(texte):
         st.error(f"Erreur de traduction automatique : {e}")
         return ""
 
-    # Normalisation Unicode (suppression des accents) + mise en minuscule
-    texte = unicodedata.normalize('NFKD', texte).encode('ASCII', 'ignore').decode('utf-8').lower()
+    # Normalisation Unicode (accents, minuscules)
+    try:
+        texte = unicodedata.normalize('NFKD', texte).encode('ASCII', 'ignore').decode('utf-8').lower()
+    except Exception as e:
+        st.warning(f"Erreur de normalisation : {e}")
+        texte = texte.lower()  # fallback simple
 
-    # Tokenisation (toujours en dehors du if)
+    # Tokenisation
     tokens = word_tokenize(texte)
 
-    # Suppression des stopwords, lemmatisation et stemming
+    # Stop words, lemmatisation, stemming
     tokens = [
         stemmer.stem(lemmatiseur.lemmatize(token))
         for token in tokens
@@ -61,7 +65,6 @@ def preprocesser_texte(texte):
     ]
 
     return ' '.join(tokens)
-
 
 # Titre de l'application
 st.title("🧠 Détection de Sentiment Multilingue")
