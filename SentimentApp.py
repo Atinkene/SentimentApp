@@ -23,18 +23,33 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
+from nltk.stem import PorterStemmer
+import unicodedata
 
 # Télécharger les ressources NLTK nécessaires
 nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# Fonction de prétraitement du texte
+# Initialiser les outils
+stop_words = set(stopwords.words('english'))
+lemmatiseur = WordNetLemmatizer()
+stemmer = PorterStemmer()
+
 def preprocesser_texte(texte):
-    stop_words = set(stopwords.words('english'))
-    lemmatiseur = WordNetLemmatizer()
-    tokens = word_tokenize(texte.lower())
-    tokens = [lemmatiseur.lemmatize(token) for token in tokens if token.isalnum() and token not in stop_words]
+    # Normalisation : enlever les accents et mettre en minuscule
+    texte = unicodedata.normalize('NFKD', texte).encode('ASCII', 'ignore').decode('utf-8').lower()
+
+    # Tokenisation
+    tokens = word_tokenize(texte)
+
+    # Nettoyage + suppression des stopwords + lemmatisation + stemming
+    tokens = [
+        stemmer.stem(lemmatiseur.lemmatize(token))
+        for token in tokens
+        if token.isalnum() and token not in stop_words
+    ]
+
     return ' '.join(tokens)
 
 # Titre de l'application
