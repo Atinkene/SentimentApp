@@ -35,8 +35,11 @@ stop_words = set(stopwords.words('english'))
 lemmatiseur = WordNetLemmatizer()
 stemmer = PorterStemmer()
 
-# Fonction de prétraitement du texte
 def preprocesser_texte(texte):
+    # Si texte n'est pas une string, le transformer en chaîne vide
+    if not isinstance(texte, str):
+        texte = ""
+
     # Traduction vers l'anglais si nécessaire
     try:
         texte = GoogleTranslator(source='auto', target='en').translate(texte)
@@ -44,13 +47,11 @@ def preprocesser_texte(texte):
         st.error(f"Erreur de traduction automatique : {e}")
         return ""
 
-    # Normalisation : suppression des accents et mise en minuscule
+    # Normalisation Unicode (suppression des accents) + mise en minuscule
     texte = unicodedata.normalize('NFKD', texte).encode('ASCII', 'ignore').decode('utf-8').lower()
 
-    if not isinstance(texte, str):
-        texte = ""
-        tokens = word_tokenize(texte.lower())
-
+    # Tokenisation (toujours en dehors du if)
+    tokens = word_tokenize(texte)
 
     # Suppression des stopwords, lemmatisation et stemming
     tokens = [
@@ -60,6 +61,7 @@ def preprocesser_texte(texte):
     ]
 
     return ' '.join(tokens)
+
 
 # Titre de l'application
 st.title("🧠 Détection de Sentiment Multilingue")
