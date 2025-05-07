@@ -1,6 +1,8 @@
-pandas
-joblib
-scikit-learn
 streamlit
-optuna
+pandas
+numpy
+joblib
 nltk
+matplotlib
+scikit-learn
+tensorflow
